@@ -34,7 +34,7 @@ jobs:
           #   goos: dragonfly
           # - goarch: 386
           #   goos: darwin
-        include:
+         include:
           # BEIGIN MacOS ARM64
           # - goos: darwin
           #   goarch: arm64
