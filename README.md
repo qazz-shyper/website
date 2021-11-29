@@ -8,6 +8,6 @@ v0.0.3 follow [v1.4.5](https://github.com/XTLS/Xray-core)
 
 4、main/main.go 搜索xray 替换成website
 
-5、commands\base/env.go help.go command.go搜索xray 替换成website
+5、commands/base/env.go help.go command.go搜索xray 替换成website
 
-6、修改.github/workflow/release.yml
+6、修改.github/workflow/release.yml，增加upx压缩及文件名
