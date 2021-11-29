@@ -1,4 +1,4 @@
-v0.0.3 follow v1.4.5
+v0.0.3 follow [v1.4.5](https://github.com/XTLS/Xray-core)
 
 1、搜寻github.com/xtls/xray-core替换成github.com/qazz-shyper/website
 
