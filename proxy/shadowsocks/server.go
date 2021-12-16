@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/log"
@@ -18,6 +16,7 @@ import (
 	"github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/features/routing"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/udp"
 )
 
@@ -113,10 +112,6 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn stat.Connection, dis
 	inbound := session.InboundFromContext(ctx)
 	if inbound == nil {
 		panic("no inbound metadata")
-	}
-
-	if s.validator.Count() == 1 {
-		inbound.User, _ = s.validator.GetOnlyUser()
 	}
 
 	var dest *net.Destination
@@ -271,7 +266,7 @@ func (s *Server) handleConnection(ctx context.Context, conn stat.Connection, dis
 		return nil
 	}
 
-	var requestDoneAndCloseWriter = task.OnSuccess(requestDone, task.Close(link.Writer))
+	requestDoneAndCloseWriter := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, requestDoneAndCloseWriter, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)

@@ -5,8 +5,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/log"
@@ -20,6 +18,7 @@ import (
 	"github.com/qazz-shyper/website/features"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/features/routing"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/udp"
 )
 
@@ -182,7 +181,7 @@ func (s *Server) transport(ctx context.Context, reader io.Reader, writer io.Writ
 		return nil
 	}
 
-	var requestDonePost = task.OnSuccess(requestDone, task.Close(link.Writer))
+	requestDonePost := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, requestDonePost, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)
@@ -237,7 +236,6 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn stat.Connection, dis
 
 		for _, payload := range mpayload {
 			request, err := DecodeUDPPacket(payload)
-
 			if err != nil {
 				newError("failed to parse UDP request").Base(err).WriteToLog(session.ExportIDToError(ctx))
 				payload.Release()

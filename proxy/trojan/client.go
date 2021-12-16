@@ -5,8 +5,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/errors"
@@ -22,6 +20,7 @@ import (
 	"github.com/qazz-shyper/website/features/stats"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )
 
@@ -204,7 +203,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return buf.Copy(reader, link.Writer, buf.UpdateActivity(timer))
 	}
 
-	var responseDoneAndCloseWriter = task.OnSuccess(getResponse, task.Close(link.Writer))
+	responseDoneAndCloseWriter := task.OnSuccess(getResponse, task.Close(link.Writer))
 	if err := task.Run(ctx, postRequest, responseDoneAndCloseWriter); err != nil {
 		return newError("connection ends").Base(err)
 	}

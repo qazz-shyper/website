@@ -2,8 +2,7 @@ package shadowsocks
 
 import (
 	"context"
-
-	"github.com/qazz-shyper/website/transport/internet/stat"
+	"time"
 
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
@@ -17,6 +16,7 @@ import (
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 // Client is a inbound handler for Shadowsocks protocol
@@ -101,18 +101,22 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
 	if request.Command == protocol.RequestCommandTCP {
-		bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
-		if err != nil {
-			return newError("failed to write request").Base(err)
-		}
-
-		if err := bufferedWriter.SetBuffered(false); err != nil {
-			return err
-		}
-
 		requestDone := func() error {
 			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+			bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+			bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
+			if err != nil {
+				return newError("failed to write request").Base(err)
+			}
+
+			if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+				return newError("failed to write A request payload").Base(err).AtWarning()
+			}
+
+			if err := bufferedWriter.SetBuffered(false); err != nil {
+				return err
+			}
+
 			return buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer))
 		}
 
@@ -127,7 +131,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return buf.Copy(responseReader, link.Writer, buf.UpdateActivity(timer))
 		}
 
-		var responseDoneAndCloseWriter = task.OnSuccess(responseDone, task.Close(link.Writer))
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
 		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
 			return newError("connection ends").Base(err)
 		}
@@ -165,7 +169,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return nil
 		}
 
-		var responseDoneAndCloseWriter = task.OnSuccess(responseDone, task.Close(link.Writer))
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
 		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
 			return newError("connection ends").Base(err)
 		}

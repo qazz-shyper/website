@@ -9,7 +9,6 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 	"github.com/qazz-shyper/website/common/bitmask"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/crypto"
-	"github.com/qazz-shyper/website/common/dice"
+	"github.com/qazz-shyper/website/common/drain"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/protocol"
 	"github.com/qazz-shyper/website/common/task"
@@ -139,22 +138,18 @@ func parseSecurityType(b byte) protocol.SecurityType {
 // DecodeRequestHeader decodes and returns (if successful) a RequestHeader from an input stream.
 func (s *ServerSession) DecodeRequestHeader(reader io.Reader, isDrain bool) (*protocol.RequestHeader, error) {
 	buffer := buf.New()
-	behaviorRand := dice.NewDeterministicDice(int64(s.userValidator.GetBehaviorSeed()))
-	BaseDrainSize := behaviorRand.Roll(3266)
-	RandDrainMax := behaviorRand.Roll(64) + 1
-	RandDrainRolled := dice.Roll(RandDrainMax)
-	DrainSize := BaseDrainSize + 16 + 38 + RandDrainRolled
-	readSizeRemain := DrainSize
+
+	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(s.userValidator.GetBehaviorSeed()), 16+38, 3266, 64)
+
+	if err != nil {
+		return nil, newError("failed to initialize drainer").Base(err)
+	}
 
 	drainConnection := func(e error) error {
 		// We read a deterministic generated length of data before closing the connection to offset padding read pattern
-		readSizeRemain -= int(buffer.Len())
-		if readSizeRemain > 0 && isDrain {
-			err := s.DrainConnN(reader, readSizeRemain)
-			if err != nil {
-				return newError("failed to drain connection DrainSize = ", BaseDrainSize, " ", RandDrainMax, " ", RandDrainRolled).Base(err).Base(e)
-			}
-			return newError("connection drained DrainSize = ", BaseDrainSize, " ", RandDrainMax, " ", RandDrainRolled).Base(e)
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		if isDrain {
+			return drain.WithError(drainer, reader, e)
 		}
 		return e
 	}
@@ -183,7 +178,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader, isDrain bool) (*pr
 		aeadData, shouldDrain, bytesRead, errorReason := vmessaead.OpenVMessAEADHeader(fixedSizeCmdKey, fixedSizeAuthID, reader)
 		if errorReason != nil {
 			if shouldDrain {
-				readSizeRemain -= bytesRead
+				drainer.AcknowledgeReceive(bytesRead)
 				return nil, drainConnection(newError("AEAD read failed").Base(errorReason))
 			} else {
 				return nil, drainConnection(newError("AEAD read failed, drain skipped").Base(errorReason))
@@ -214,7 +209,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader, isDrain bool) (*pr
 		return nil, drainConnection(newError("invalid user").Base(errorAEAD))
 	}
 
-	readSizeRemain -= int(buffer.Len())
+	drainer.AcknowledgeReceive(int(buffer.Len()))
 	buffer.Clear()
 	if _, err := buffer.ReadFullFrom(decryptor, 38); err != nil {
 		return nil, newError("failed to read request header").Base(err)
@@ -363,6 +358,17 @@ func (s *ServerSession) DecodeRequestBody(request *protocol.RequestHeader, reade
 			NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
 			AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
 		}
+		if request.Option.Has(protocol.RequestOptionAuthenticatedLength) {
+			AuthenticatedLengthKey := vmessaead.KDF16(s.requestBodyKey[:], "auth_len")
+			AuthenticatedLengthKeyAEAD := crypto.NewAesGcm(AuthenticatedLengthKey)
+
+			lengthAuth := &crypto.AEADAuthenticator{
+				AEAD:                    AuthenticatedLengthKeyAEAD,
+				NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
+				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
+			}
+			sizeParser = NewAEADSizeParser(lengthAuth)
+		}
 		return crypto.NewAuthenticationReader(auth, sizeParser, reader, request.Command.TransferType(), padding)
 
 	case protocol.SecurityType_CHACHA20_POLY1305:
@@ -372,6 +378,18 @@ func (s *ServerSession) DecodeRequestBody(request *protocol.RequestHeader, reade
 			AEAD:                    aead,
 			NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
 			AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
+		}
+		if request.Option.Has(protocol.RequestOptionAuthenticatedLength) {
+			AuthenticatedLengthKey := vmessaead.KDF16(s.requestBodyKey[:], "auth_len")
+			AuthenticatedLengthKeyAEAD, err := chacha20poly1305.New(GenerateChacha20Poly1305Key(AuthenticatedLengthKey))
+			common.Must(err)
+
+			lengthAuth := &crypto.AEADAuthenticator{
+				AEAD:                    AuthenticatedLengthKeyAEAD,
+				NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
+				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
+			}
+			sizeParser = NewAEADSizeParser(lengthAuth)
 		}
 		return crypto.NewAuthenticationReader(auth, sizeParser, reader, request.Command.TransferType(), padding)
 
@@ -481,6 +499,17 @@ func (s *ServerSession) EncodeResponseBody(request *protocol.RequestHeader, writ
 			NonceGenerator:          GenerateChunkNonce(s.responseBodyIV[:], uint32(aead.NonceSize())),
 			AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
 		}
+		if request.Option.Has(protocol.RequestOptionAuthenticatedLength) {
+			AuthenticatedLengthKey := vmessaead.KDF16(s.requestBodyKey[:], "auth_len")
+			AuthenticatedLengthKeyAEAD := crypto.NewAesGcm(AuthenticatedLengthKey)
+
+			lengthAuth := &crypto.AEADAuthenticator{
+				AEAD:                    AuthenticatedLengthKeyAEAD,
+				NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
+				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
+			}
+			sizeParser = NewAEADSizeParser(lengthAuth)
+		}
 		return crypto.NewAuthenticationWriter(auth, sizeParser, writer, request.Command.TransferType(), padding)
 
 	case protocol.SecurityType_CHACHA20_POLY1305:
@@ -491,14 +520,21 @@ func (s *ServerSession) EncodeResponseBody(request *protocol.RequestHeader, writ
 			NonceGenerator:          GenerateChunkNonce(s.responseBodyIV[:], uint32(aead.NonceSize())),
 			AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
 		}
+		if request.Option.Has(protocol.RequestOptionAuthenticatedLength) {
+			AuthenticatedLengthKey := vmessaead.KDF16(s.requestBodyKey[:], "auth_len")
+			AuthenticatedLengthKeyAEAD, err := chacha20poly1305.New(GenerateChacha20Poly1305Key(AuthenticatedLengthKey))
+			common.Must(err)
+
+			lengthAuth := &crypto.AEADAuthenticator{
+				AEAD:                    AuthenticatedLengthKeyAEAD,
+				NonceGenerator:          GenerateChunkNonce(s.requestBodyIV[:], uint32(aead.NonceSize())),
+				AdditionalDataGenerator: crypto.GenerateEmptyBytes(),
+			}
+			sizeParser = NewAEADSizeParser(lengthAuth)
+		}
 		return crypto.NewAuthenticationWriter(auth, sizeParser, writer, request.Command.TransferType(), padding)
 
 	default:
 		panic("Unknown security type.")
 	}
-}
-
-func (s *ServerSession) DrainConnN(reader io.Reader, n int) error {
-	_, err := io.CopyN(ioutil.Discard, reader, int64(n))
-	return err
 }

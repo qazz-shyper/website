@@ -8,13 +8,12 @@ package proxy
 import (
 	"context"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/protocol"
 	"github.com/qazz-shyper/website/features/routing"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 // An Inbound processes inbound connections.

@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/net"
@@ -15,15 +13,19 @@ import (
 	"github.com/qazz-shyper/website/common/signal"
 	"github.com/qazz-shyper/website/common/task"
 	"github.com/qazz-shyper/website/core"
+	"github.com/qazz-shyper/website/features/dns"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 // Client is a Socks5 client.
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
+	version       Version
+	dns           dns.Client
 }
 
 // NewClient create a new Socks5 client based on the given config.
@@ -41,10 +43,16 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	}
 
 	v := core.MustFromContext(ctx)
-	return &Client{
+	c := &Client{
 		serverPicker:  protocol.NewRoundRobinServerPicker(serverList),
 		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-	}, nil
+		version:       config.Version,
+	}
+	if config.Version == Version_SOCKS4 {
+		c.dns = v.GetFeature(dns.ClientType()).(dns.Client)
+	}
+
+	return c, nil
 }
 
 // Process implements proxy.Outbound.Process.
@@ -91,6 +99,31 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		Address: destination.Address,
 		Port:    destination.Port,
 	}
+
+	switch c.version {
+	case Version_SOCKS4:
+		if request.Address.Family().IsDomain() {
+			ips, err := c.dns.LookupIP(request.Address.Domain(), dns.IPOption{
+				IPv4Enable: true,
+			})
+			if err != nil {
+				return err
+			} else if len(ips) == 0 {
+				return dns.ErrEmptyResponse
+			}
+			request.Address = net.IPAddress(ips[0])
+		}
+		fallthrough
+	case Version_SOCKS4A:
+		request.Version = socks4Version
+
+		if destination.Network == net.Network_UDP {
+			return newError("udp is not supported in socks4")
+		} else if destination.Address.Family().IsIPv6() {
+			return newError("ipv6 is not supported in socks4")
+		}
+	}
+
 	if destination.Network == net.Network_UDP {
 		request.Command = protocol.RequestCommandUDP
 	}
@@ -150,7 +183,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		}
 	}
 
-	var responseDonePost = task.OnSuccess(responseFunc, task.Close(link.Writer))
+	responseDonePost := task.OnSuccess(responseFunc, task.Close(link.Writer))
 	if err := task.Run(ctx, requestFunc, responseDonePost); err != nil {
 		return newError("connection ends").Base(err)
 	}

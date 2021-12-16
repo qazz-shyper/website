@@ -10,8 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/errors"
@@ -31,13 +29,12 @@ import (
 	"github.com/qazz-shyper/website/features/stats"
 	"github.com/qazz-shyper/website/proxy/vless"
 	"github.com/qazz-shyper/website/proxy/vless/encoding"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )
 
-var (
-	xtls_show = false
-)
+var xtls_show = false
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {

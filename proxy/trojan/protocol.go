@@ -8,8 +8,6 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/errors"
 	"github.com/qazz-shyper/website/common/net"
@@ -17,6 +15,7 @@ import (
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/common/signal"
 	"github.com/qazz-shyper/website/features/stats"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )
 
@@ -323,7 +322,7 @@ func ReadV(reader buf.Reader, writer buf.Writer, timer signal.ActivityUpdater, c
 							panic("XTLS Splice: not TCP inbound")
 						}
 					} else {
-						//panic("XTLS Splice: nil inbound or nil inbound.Conn")
+						// panic("XTLS Splice: nil inbound or nil inbound.Conn")
 					}
 				}
 				reader = buf.NewReadVReader(conn.Connection, rawConn, nil)

@@ -2,14 +2,11 @@ package trojan
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/qazz-shyper/website/transport/internet/stat"
 
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
@@ -23,10 +20,12 @@ import (
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/common/signal"
 	"github.com/qazz-shyper/website/common/task"
-	core "github.com/qazz-shyper/website/core"
+	"github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/features/routing"
 	"github.com/qazz-shyper/website/features/stats"
+	"github.com/qazz-shyper/website/transport/internet/stat"
+	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/internet/udp"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )
@@ -382,7 +381,7 @@ func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Sess
 		return nil
 	}
 
-	var requestDonePost = task.OnSuccess(requestDone, task.Close(link.Writer))
+	requestDonePost := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, requestDonePost, responseDone); err != nil {
 		common.Must(common.Interrupt(link.Reader))
 		common.Must(common.Interrupt(link.Writer))
