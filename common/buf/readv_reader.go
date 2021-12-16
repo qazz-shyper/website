@@ -7,9 +7,8 @@ import (
 	"io"
 	"syscall"
 
-	"github.com/qazz-shyper/website/features/stats"
-
 	"github.com/qazz-shyper/website/common/platform"
+	"github.com/qazz-shyper/website/features/stats"
 )
 
 type allocStrategy struct {

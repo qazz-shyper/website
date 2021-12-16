@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
 	"golang.org/x/sync/errgroup"
 
 	"github.com/qazz-shyper/website/common"

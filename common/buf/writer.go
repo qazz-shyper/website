@@ -5,10 +5,9 @@ import (
 	"net"
 	"sync"
 
-	"github.com/qazz-shyper/website/features/stats"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/errors"
+	"github.com/qazz-shyper/website/features/stats"
 )
 
 // BufferToBytesWriter is a Writer that writes alloc.Buffer into underlying writer.
