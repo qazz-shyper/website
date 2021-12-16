@@ -18,9 +18,9 @@ import (
 )
 
 var (
-	version  = "0.0.3"
+	version  = "0.0.4"
 	build    = "Custom"
-	codename = "1.4.5"
+	codename = "1.5.1"
 	intro    = "A modified platform for anti-censorship."
 )
 
