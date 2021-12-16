@@ -6,14 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qazz-shyper/website/common/signal/done"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/protocol/udp"
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/common/signal"
+	"github.com/qazz-shyper/website/common/signal/done"
 	"github.com/qazz-shyper/website/features/routing"
 	"github.com/qazz-shyper/website/transport"
 )

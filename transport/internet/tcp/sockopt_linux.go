@@ -7,9 +7,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common/net"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 const SO_ORIGINAL_DST = 80

@@ -3,12 +3,11 @@ package tcp
 import (
 	"context"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )

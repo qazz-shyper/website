@@ -11,9 +11,7 @@ import (
 	"github.com/qazz-shyper/website/common/session"
 )
 
-var (
-	effectiveListener = DefaultListener{}
-)
+var effectiveListener = DefaultListener{}
 
 type controller func(network, address string, fd uintptr) error
 

@@ -3,11 +3,10 @@ package udp
 import (
 	"context"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 func init() {

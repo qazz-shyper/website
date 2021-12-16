@@ -10,19 +10,19 @@ import (
 	"os"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/gorilla/websocket"
 
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 )
 
 //go:embed dialer.html
 var webpage []byte
+
 var conns chan *websocket.Conn
 
 func init() {
@@ -119,7 +119,8 @@ func dialWebSocket(ctx context.Context, dest net.Destination, streamSettings *in
 
 	header := wsSettings.GetRequestHeader()
 	if ed != nil {
-		header.Set("Sec-WebSocket-Protocol", base64.StdEncoding.EncodeToString(ed))
+		// RawURLEncoding is support by both V2Ray/V2Fly and XRay.
+		header.Set("Sec-WebSocket-Protocol", base64.RawURLEncoding.EncodeToString(ed))
 	}
 
 	conn, resp, err := dialer.Dial(uri, header)
