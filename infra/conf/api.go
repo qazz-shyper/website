@@ -5,6 +5,7 @@ import (
 
 	"github.com/qazz-shyper/website/app/commander"
 	loggerservice "github.com/qazz-shyper/website/app/log/command"
+	observatoryservice "github.com/qazz-shyper/website/app/observatory/command"
 	handlerservice "github.com/qazz-shyper/website/app/proxyman/command"
 	statsservice "github.com/qazz-shyper/website/app/stats/command"
 	"github.com/qazz-shyper/website/common/serial"
@@ -31,6 +32,8 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
+		case "observatoryservice":
+			services = append(services, serial.ToTypedMessage(&observatoryservice.Config{}))
 		}
 	}
 
