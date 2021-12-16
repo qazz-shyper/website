@@ -6,8 +6,7 @@ import (
 	"github.com/qazz-shyper/website/common"
 )
 
-type SniffHeader struct {
-}
+type SniffHeader struct{}
 
 func (h *SniffHeader) Protocol() string {
 	return "bittorrent"

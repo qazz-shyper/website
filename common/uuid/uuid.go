@@ -10,9 +10,7 @@ import (
 	"github.com/qazz-shyper/website/common/errors"
 )
 
-var (
-	byteGroups = []int{8, 4, 4, 4, 12}
-)
+var byteGroups = []int{8, 4, 4, 4, 12}
 
 type UUID [16]byte
 
