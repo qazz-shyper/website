@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"golang.org/x/net/http2"
 
 	"github.com/qazz-shyper/website/common"
@@ -26,6 +24,7 @@ import (
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 )
 
@@ -133,7 +132,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return buf.Copy(buf.NewReader(conn), link.Writer, buf.UpdateActivity(timer))
 	}
 
-	var responseDonePost = task.OnSuccess(responseFunc, task.Close(link.Writer))
+	responseDonePost := task.OnSuccess(responseFunc, task.Close(link.Writer))
 	if err := task.Run(ctx, requestFunc, responseDonePost); err != nil {
 		return newError("connection ends").Base(err)
 	}

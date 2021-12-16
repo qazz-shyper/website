@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/errors"
@@ -24,6 +22,7 @@ import (
 	"github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/features/routing"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 // Server is an HTTP proxy server.
@@ -206,7 +205,7 @@ func (s *Server) handleConnect(ctx context.Context, _ *http.Request, reader *buf
 		return nil
 	}
 
-	var closeWriter = task.OnSuccess(requestDone, task.Close(link.Writer))
+	closeWriter := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, closeWriter, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)

@@ -4,8 +4,7 @@ import (
 	"context"
 	"io"
 	"sync"
-
-	"github.com/qazz-shyper/website/transport/internet/stat"
+	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
 
@@ -14,18 +13,21 @@ import (
 	"github.com/qazz-shyper/website/common/net"
 	dns_proto "github.com/qazz-shyper/website/common/protocol/dns"
 	"github.com/qazz-shyper/website/common/session"
+	"github.com/qazz-shyper/website/common/signal"
 	"github.com/qazz-shyper/website/common/task"
 	"github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/dns"
+	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		h := new(Handler)
-		if err := core.RequireFeatures(ctx, func(dnsClient dns.Client) error {
-			return h.Init(config.(*Config), dnsClient)
+		if err := core.RequireFeatures(ctx, func(dnsClient dns.Client, policyManager policy.Manager) error {
+			return h.Init(config.(*Config), dnsClient, policyManager)
 		}); err != nil {
 			return nil, err
 		}
@@ -41,10 +43,13 @@ type Handler struct {
 	client          dns.Client
 	ownLinkVerifier ownLinkVerifier
 	server          net.Destination
+	timeout         time.Duration
 }
 
-func (h *Handler) Init(config *Config, dnsClient dns.Client) error {
+func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
 	h.client = dnsClient
+	h.timeout = policyManager.ForLevel(config.UserLevel).Timeouts.ConnectionIdle
+
 	if v, ok := dnsClient.(ownLinkVerifier); ok {
 		h.ownLinkVerifier = v
 	}
@@ -144,6 +149,9 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 		}
 	}
 
+	ctx, cancel := context.WithCancel(ctx)
+	timer := signal.CancelAfterInactivity(ctx, cancel, h.timeout)
+
 	request := func() error {
 		defer conn.Close()
 
@@ -156,6 +164,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 			if err != nil {
 				return err
 			}
+
+			timer.Update()
 
 			if !h.isOwnLink(ctx) {
 				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
@@ -181,6 +191,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 			if err != nil {
 				return err
 			}
+
+			timer.Update()
 
 			if err := writer.WriteMessage(b); err != nil {
 				return err
@@ -220,6 +232,17 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	if rcode == 0 && len(ips) == 0 && err != dns.ErrEmptyResponse {
 		newError("ip query").Base(err).WriteToLog()
 		return
+	}
+
+	switch qType {
+	case dnsmessage.TypeA:
+		for i, ip := range ips {
+			ips[i] = ip.To4()
+		}
+	case dnsmessage.TypeAAAA:
+		for i, ip := range ips {
+			ips[i] = ip.To16()
+		}
 	}
 
 	b := buf.New()

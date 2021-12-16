@@ -7,8 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/log"
@@ -20,6 +18,7 @@ import (
 	"github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/policy"
 	"github.com/qazz-shyper/website/features/routing"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 func init() {
