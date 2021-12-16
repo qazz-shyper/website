@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-// A Command is an implementation of a xray command
+// A Command is an implementation of a website command
 // like website run or website version.
 type Command struct {
 	// Run runs the command.
@@ -113,8 +113,10 @@ func ExitIfErrors() {
 	}
 }
 
-var exitStatus = 0
-var exitMu sync.Mutex
+var (
+	exitStatus = 0
+	exitMu     sync.Mutex
+)
 
 // SetExitStatus set exit status code
 func SetExitStatus(n int) {

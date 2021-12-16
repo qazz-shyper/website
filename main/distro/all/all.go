@@ -3,7 +3,7 @@ package all
 import (
 	// The following are necessary as they register handlers in their init functions.
 
-	// Required features. Can't remove unless there is replacements.
+	// Mandatory features. Can't remove unless there are replacements.
 	_ "github.com/qazz-shyper/website/app/dispatcher"
 	_ "github.com/qazz-shyper/website/app/proxyman/inbound"
 	_ "github.com/qazz-shyper/website/app/proxyman/outbound"
@@ -14,6 +14,9 @@ import (
 	_ "github.com/qazz-shyper/website/app/proxyman/command"
 	_ "github.com/qazz-shyper/website/app/stats/command"
 
+	// Developer preview services
+	_ "github.com/qazz-shyper/website/app/observatory/command"
+
 	// Other optional features.
 	_ "github.com/qazz-shyper/website/app/dns"
 	_ "github.com/qazz-shyper/website/app/dns/fakedns"
@@ -23,12 +26,19 @@ import (
 	_ "github.com/qazz-shyper/website/app/router"
 	_ "github.com/qazz-shyper/website/app/stats"
 
+	// Fix dependency cycle caused by core import in internet package
+	_ "github.com/qazz-shyper/website/transport/internet/tagged/taggedimpl"
+
+	// Developer preview features
+	_ "github.com/qazz-shyper/website/app/observatory"
+
 	// Inbound and outbound proxies.
 	_ "github.com/qazz-shyper/website/proxy/blackhole"
 	_ "github.com/qazz-shyper/website/proxy/dns"
 	_ "github.com/qazz-shyper/website/proxy/dokodemo"
 	_ "github.com/qazz-shyper/website/proxy/freedom"
 	_ "github.com/qazz-shyper/website/proxy/http"
+	_ "github.com/qazz-shyper/website/proxy/loopback"
 	_ "github.com/qazz-shyper/website/proxy/mtproto"
 	_ "github.com/qazz-shyper/website/proxy/shadowsocks"
 	_ "github.com/qazz-shyper/website/proxy/socks"
