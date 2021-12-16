@@ -3,8 +3,6 @@ package outbound
 import (
 	"context"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/app/proxyman"
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/mux"
@@ -18,6 +16,7 @@ import (
 	"github.com/qazz-shyper/website/proxy"
 	"github.com/qazz-shyper/website/transport"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/pipe"
 )
@@ -136,13 +135,17 @@ func (h *Handler) Tag() string {
 func (h *Handler) Dispatch(ctx context.Context, link *transport.Link) {
 	if h.mux != nil && (h.mux.Enabled || session.MuxPreferedFromContext(ctx)) {
 		if err := h.mux.Dispatch(ctx, link); err != nil {
-			newError("failed to process mux outbound traffic").Base(err).WriteToLog(session.ExportIDToError(ctx))
+			err := newError("failed to process mux outbound traffic").Base(err)
+			session.SubmitOutboundErrorToOriginator(ctx, err)
+			err.WriteToLog(session.ExportIDToError(ctx))
 			common.Interrupt(link.Writer)
 		}
 	} else {
 		if err := h.proxy.Process(ctx, link, h); err != nil {
 			// Ensure outbound ray is properly closed.
-			newError("failed to process outbound traffic").Base(err).WriteToLog(session.ExportIDToError(ctx))
+			err := newError("failed to process outbound traffic").Base(err)
+			session.SubmitOutboundErrorToOriginator(ctx, err)
+			err.WriteToLog(session.ExportIDToError(ctx))
 			common.Interrupt(link.Writer)
 		} else {
 			common.Must(common.Close(link.Writer))

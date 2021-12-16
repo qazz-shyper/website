@@ -6,8 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/app/proxyman"
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
@@ -20,6 +18,7 @@ import (
 	"github.com/qazz-shyper/website/features/stats"
 	"github.com/qazz-shyper/website/proxy"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tcp"
 	"github.com/qazz-shyper/website/transport/internet/udp"
 	"github.com/qazz-shyper/website/transport/pipe"
@@ -101,6 +100,7 @@ func (w *tcpWorker) callback(conn stat.Connection) {
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 		content.SniffingRequest.ExcludeForDomain = w.sniffingConfig.DomainsExcluded
 		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+		content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 
@@ -160,6 +160,11 @@ type udpConn struct {
 	done             *done.Instance
 	uplink           stats.Counter
 	downlink         stats.Counter
+	inactive         bool
+}
+
+func (c *udpConn) setInactive() {
+	c.inactive = true
 }
 
 func (c *udpConn) updateActivity() {
@@ -320,13 +325,18 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 				content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 				content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+				content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 			}
 			ctx = session.ContextWithContent(ctx, content)
 			if err := w.proxy.Process(ctx, net.Network_UDP, conn, w.dispatcher); err != nil {
 				newError("connection ends").Base(err).WriteToLog(session.ExportIDToError(ctx))
 			}
 			conn.Close()
-			w.removeConn(id)
+			// conn not removed by checker TODO may be lock worker here is better
+			if !conn.inactive {
+				conn.setInactive()
+				w.removeConn(id)
+			}
 		}()
 	}
 }
@@ -354,8 +364,11 @@ func (w *udpWorker) clean() error {
 	}
 
 	for addr, conn := range w.activeConn {
-		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 300 {
-			delete(w.activeConn, addr)
+		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 5*60 { // TODO Timeout too small
+			if !conn.inactive {
+				conn.setInactive()
+				delete(w.activeConn, addr)
+			}
 			conn.Close()
 		}
 	}
@@ -463,6 +476,7 @@ func (w *dsWorker) callback(conn stat.Connection) {
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 		content.SniffingRequest.ExcludeForDomain = w.sniffingConfig.DomainsExcluded
 		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+		content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 
@@ -482,6 +496,7 @@ func (w *dsWorker) Proxy() proxy.Inbound {
 func (w *dsWorker) Port() net.Port {
 	return net.Port(0)
 }
+
 func (w *dsWorker) Start() error {
 	ctx := context.Background()
 	hub, err := internet.ListenUnix(ctx, w.address, w.stream, func(conn stat.Connection) {

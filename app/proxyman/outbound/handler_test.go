@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/app/policy"
 	. "github.com/qazz-shyper/website/app/proxyman/outbound"
 	"github.com/qazz-shyper/website/app/stats"
@@ -14,6 +12,7 @@ import (
 	core "github.com/qazz-shyper/website/core"
 	"github.com/qazz-shyper/website/features/outbound"
 	"github.com/qazz-shyper/website/proxy/freedom"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 func TestInterfaces(t *testing.T) {
