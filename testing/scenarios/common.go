@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -23,6 +23,7 @@ import (
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/retry"
 	"github.com/qazz-shyper/website/common/serial"
+	"github.com/qazz-shyper/website/common/units"
 	core "github.com/qazz-shyper/website/core"
 )
 
@@ -102,7 +103,7 @@ func genTestBinaryPath() {
 	testBinaryPathGen.Do(func() {
 		var tempDir string
 		common.Must(retry.Timed(5, 100).On(func() error {
-			dir, err := ioutil.TempDir("", "xray")
+			dir, err := os.MkdirTemp("", "xray")
 			if err != nil {
 				return err
 			}
@@ -140,6 +141,23 @@ func CloseAllServers(servers []*exec.Cmd) {
 	log.Record(&log.GeneralMessage{
 		Severity: log.Severity_Info,
 		Content:  "All server closed.",
+	})
+}
+
+func CloseServer(server *exec.Cmd) {
+	log.Record(&log.GeneralMessage{
+		Severity: log.Severity_Info,
+		Content:  "Closing server.",
+	})
+	if runtime.GOOS == "windows" {
+		server.Process.Kill()
+	} else {
+		server.Process.Signal(syscall.SIGTERM)
+	}
+	server.Process.Wait()
+	log.Record(&log.GeneralMessage{
+		Severity: log.Severity_Info,
+		Content:  "Server closed.",
 	})
 }
 
@@ -181,7 +199,18 @@ func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 }
 
 func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() error {
-	return func() error {
+	return func() (err1 error) {
+		start := time.Now()
+		defer func() {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			// For info on each, see: https://golang.org/pkg/runtime/#MemStats
+			fmt.Println("testConn finishes:", time.Since(start).Milliseconds(), "ms\t",
+				err1, "\tAlloc =", units.ByteSize(m.Alloc).String(),
+				"\tTotalAlloc =", units.ByteSize(m.TotalAlloc).String(),
+				"\tSys =", units.ByteSize(m.Sys).String(),
+				"\tNumGC =", m.NumGC)
+		}()
 		payload := make([]byte, payloadSize)
 		common.Must2(rand.Read(payload))
 
