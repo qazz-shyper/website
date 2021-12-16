@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/qazz-shyper/website/common"
@@ -17,6 +15,7 @@ import (
 	"github.com/qazz-shyper/website/testing/servers/tcp"
 	"github.com/qazz-shyper/website/transport/internet"
 	. "github.com/qazz-shyper/website/transport/internet/http"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 )
 

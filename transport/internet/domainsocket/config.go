@@ -6,8 +6,10 @@ import (
 	"github.com/qazz-shyper/website/transport/internet"
 )
 
-const protocolName = "domainsocket"
-const sizeofSunPath = 108
+const (
+	protocolName  = "domainsocket"
+	sizeofSunPath = 108
+)
 
 func (c *Config) GetUnixAddr() (*net.UnixAddr, error) {
 	path := c.Path

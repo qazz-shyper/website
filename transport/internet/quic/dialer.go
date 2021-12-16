@@ -5,14 +5,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/lucas-clemente/quic-go"
 
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/common/task"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 )
 
@@ -154,7 +153,7 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		KeepAlive:          true,
 	}
 
-	conn, err := wrapSysConn(rawConn, config)
+	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
 	if err != nil {
 		rawConn.Close()
 		return nil, err

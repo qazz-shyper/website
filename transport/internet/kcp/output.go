@@ -4,9 +4,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/qazz-shyper/website/common/retry"
-
 	"github.com/qazz-shyper/website/common/buf"
+	"github.com/qazz-shyper/website/common/retry"
 )
 
 type SegmentWriter interface {

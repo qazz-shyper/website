@@ -5,20 +5,17 @@ import (
 	"io"
 	"sync/atomic"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/dice"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/internet/xtls"
 )
 
-var (
-	globalConv = uint32(dice.RollUint16())
-)
+var globalConv = uint32(dice.RollUint16())
 
 func fetchInput(_ context.Context, input io.Reader, reader PacketReader, conn *Connection) {
 	cache := make(chan *buf.Buffer, 1024)

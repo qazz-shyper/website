@@ -6,14 +6,13 @@ import (
 	gotls "crypto/tls"
 	"sync"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	goxtls "github.com/xtls/go"
 
 	"github.com/qazz-shyper/website/common"
 	"github.com/qazz-shyper/website/common/buf"
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/internet/udp"
 	"github.com/qazz-shyper/website/transport/internet/xtls"

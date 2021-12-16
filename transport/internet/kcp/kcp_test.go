@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 
@@ -17,6 +15,7 @@ import (
 	"github.com/qazz-shyper/website/common/net"
 	"github.com/qazz-shyper/website/transport/internet"
 	. "github.com/qazz-shyper/website/transport/internet/kcp"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 )
 
 func TestDialAndListen(t *testing.T) {

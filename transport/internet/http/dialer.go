@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qazz-shyper/website/transport/internet/stat"
-
 	"golang.org/x/net/http2"
 
 	"github.com/qazz-shyper/website/common"
@@ -18,6 +16,7 @@ import (
 	"github.com/qazz-shyper/website/common/net/cnc"
 	"github.com/qazz-shyper/website/common/session"
 	"github.com/qazz-shyper/website/transport/internet"
+	"github.com/qazz-shyper/website/transport/internet/stat"
 	"github.com/qazz-shyper/website/transport/internet/tls"
 	"github.com/qazz-shyper/website/transport/pipe"
 )
@@ -123,8 +122,22 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	opts := pipe.OptionsFromContext(ctx)
 	preader, pwriter := pipe.New(opts...)
 	breader := &buf.BufferedReader{Reader: preader}
+
+	httpMethod := "PUT"
+	if httpSettings.Method != "" {
+		httpMethod = httpSettings.Method
+	}
+
+	httpHeaders := make(http.Header)
+
+	for _, httpHeader := range httpSettings.Header {
+		for _, httpHeaderValue := range httpHeader.Value {
+			httpHeaders.Set(httpHeader.Name, httpHeaderValue)
+		}
+	}
+
 	request := &http.Request{
-		Method: "PUT",
+		Method: httpMethod,
 		Host:   httpSettings.getRandomHost(),
 		Body:   breader,
 		URL: &url.URL{
@@ -135,7 +148,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		Proto:      "HTTP/2",
 		ProtoMajor: 2,
 		ProtoMinor: 0,
-		Header:     make(http.Header),
+		Header:     httpHeaders,
 	}
 	// Disable any compression method from server.
 	request.Header.Set("Accept-Encoding", "identity")
