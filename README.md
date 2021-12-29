@@ -1,2 +1,2 @@
-v0.0.4 follow [v1.5.1](https://github.com/XTLS/Xray-core)
+v0.0.5 follow [v1.5.2](https://github.com/XTLS/Xray-core)
 
