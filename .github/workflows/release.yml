@@ -156,11 +156,11 @@ jobs:
       #  run: |
       #    GOMIPS=softfloat go build -v -o build_assets/xray_softfloat -trimpath -ldflags "-s -w -buildid=" ./main
 
-      #- name: Rename Windows Xray
-      #  if: matrix.goos == 'windows'
-      #  run: |
-      #    cd ./build_assets || exit 1
-      #    mv xray xray.exe
+      - name: Rename Windows Website
+        if: matrix.goos == 'windows'
+        run: |
+          cd ./build_assets || exit 1
+          mv website website.exe
 
       - name: Prepare to release
         run: |
