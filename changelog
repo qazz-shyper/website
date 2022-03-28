@@ -1,0 +1,36 @@
+v0.0.3 follow [v1.4.5](https://github.com/XTLS/Xray-core)
+
+1、搜寻github.com/xtls/xray-core替换成github.com/qazz-shyper/website
+   搜寻Xray替换成Website
+   
+2、core/core.go 修改20-25行
+
+var (
+	version  = "0.0.3"
+	build    = "Custom"
+	codename = "1.4.5"
+	intro    = "A modified platform for anti-censorship."
+)
+
+最后版本输出需改
+func VersionStatement() []string {
+	return []string{
+		serial.Concat("Website ", Version(), " (", codename, ")"),
+		intro,
+	}
+}
+
+
+3、main/main.go 搜索xray 替换成website
+
+4、main/commands/base/env.go help.go command.go搜索xray 替换成website
+
+5、修改.github/workflow/release.yml，增加upx压缩及文件名
+      - name: UPX website
+        if: matrix.goarch != 's390X'
+        uses: crazy-max/ghaction-upx@v1.4.0
+        with:
+          version: latest
+          files: |
+            ./build_assets/website*
+          args: -fq
