@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package xray.transport.internet.udp;
-option csharp_namespace = "Website.Transport.Internet.Udp";
-option go_package = "github.com/qazz-shyper/website/transport/internet/udp";
-option java_package = "com.xray.transport.internet.udp";
-option java_multiple_files = true;
-
-message Config {}
