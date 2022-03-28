@@ -164,6 +164,7 @@ jobs:
           mv website website.exe
           
       - name: UPX website
+        if: matrix.goarch != 's390X'
         uses: crazy-max/ghaction-upx@v1.4.0
         with:
           version: latest
