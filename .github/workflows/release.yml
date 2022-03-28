@@ -29,7 +29,7 @@ jobs:
         # goos: [windows, freebsd, openbsd, linux, dragonfly, darwin]
         goos: [windows, linux]
         goarch: [amd64, 386]
-        exclude:
+        # exclude:
           # Exclude i386 on darwin and dragonfly.
           # - goarch: 386
           #   goos: dragonfly
