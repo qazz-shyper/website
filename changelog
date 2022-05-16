@@ -25,7 +25,7 @@ func VersionStatement() []string {
 
 4、main/commands/base/env.go help.go command.go搜索xray 替换成website
 
-5、修改.github/workflow/release.yml，增加upx压缩及文件名
+5、修改.github/workflow/release.yml，增加upx压缩及文件名，在线文本比较https://www.jq22.com/textDifference
       - name: UPX website
         if: matrix.goarch != 's390X'
         uses: crazy-max/ghaction-upx@v1.4.0
