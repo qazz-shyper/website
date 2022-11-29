@@ -194,7 +194,7 @@ jobs:
           mv build_assets Website-${{ env.ASSET_NAME }}
 
       - name: Upload files to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@main
         if: env.UPLOAD_ARTIFACTS == 'true' && !cancelled()
         with:
           name: Website-${{ env.ASSET_NAME }}
