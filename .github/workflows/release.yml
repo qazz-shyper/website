@@ -3,12 +3,16 @@ name: Build and Release
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      Xray_VER: 
+        description: '编译版本'
+        default: ''
 env:
   # 上传固件到 Github Releases
   UPLOAD_RELEASES: true
   # 上传固件到 Github Artifacts
   UPLOAD_ARTIFACTS: true
-  Xray_VER: 1.6.5
+  # Xray_VER: 1.6.5
   
 jobs:
   build:
@@ -116,6 +120,7 @@ jobs:
           git clone -b main https://github.com/XTLS/Xray-core xray
           rm -rf ./xray/.github ./xray/README.md
           mv ./xray/* ./
+          echo "Xray_VER=$(grep "version  = " ./core/core.go | cut -f 2 -d'"') >> $GITHUB_ENV
           ls
 
       - name: Set up Go
