@@ -116,7 +116,7 @@ jobs:
           git clone -b main https://github.com/XTLS/Xray-core xray
           rm -rf ./xray/.github ./xray/README.md
           mv ./xray/* ./
-          echo "Xray_VER=$(grep "version  = " ./core/core.go | cut -f 2 -d'"') >> $GITHUB_ENV
+          echo "Xray_VER=$(grep "version  = " ./core/core.go | cut -f 2 -d'"')" >> $GITHUB_ENV
           ls
 
       - name: Set up Go
