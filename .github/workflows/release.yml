@@ -213,7 +213,7 @@ jobs:
         with:
           version: latest
           files: |
-            ./build_assets/website*
+            ./website*
           args: -fq
 
       - name: Restore Cache
