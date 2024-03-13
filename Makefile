@@ -8,12 +8,12 @@ MAIN = ./main
 PREFIX ?= $(shell go env GOPATH)
 ifeq ($(GOOS),windows)
 OUTPUT = $(NAME).exe
-ADDITION = go build -o w$(NAME).exe -trimpath -ldflags "-H windowsgui $(LDFLAGS)" -v $(MAIN)
+ADDITION = go build -o build_assets/w$(NAME).exe -trimpath -ldflags "-H windowsgui $(LDFLAGS)" -v $(MAIN)
 else
 OUTPUT = $(NAME)
 endif
 ifeq ($(shell echo "$(GOARCH)" | grep -Pq "(mips|mipsle)" && echo true),true) # 
-ADDITION = GOMIPS=softfloat go build -o $(NAME)_softfloat -trimpath -ldflags "$(LDFLAGS)" -v $(MAIN)
+ADDITION = GOMIPS=softfloat go build -o build_assets/$(NAME)_softfloat -trimpath -ldflags "$(LDFLAGS)" -v $(MAIN)
 endif
 .PHONY: clean
 
