@@ -205,7 +205,8 @@ jobs:
         run: |
           mkdir -p build_assets
           make
-          find . -maxdepth 1 -type f -regex '.*\(wxray\|xray\|xray_softfloat\)\(\|.exe\)' -exec mv {} ./build_assets/ \;
+          # find . -maxdepth 1 -type f -regex '.*\(wxray\|xray\|xray_softfloat\)\(\|.exe\)' -exec mv {} ./build_assets/ \;
+          find . -maxdepth 1 -type f -regex '.*\(wwebsite\|website\|website_softfloat\)\(\|.exe\)' -exec mv {} ./build_assets/ \;
       
       - name: UPX website
         if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64'
@@ -213,7 +214,7 @@ jobs:
         with:
           version: latest
           files: |
-            ./website*
+            ./build_assets/website*
           args: -fq
 
       - name: Restore Cache
