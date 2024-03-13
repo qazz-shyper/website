@@ -31,13 +31,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone Openwrt Source Code
-        run: |
-          git clone -b main https://github.com/XTLS/Xray-core xray
-          rm -rf ./xray/.github ./xray/README.md
-          mv ./xray/* ./
-          echo "Xray_VER=$(grep "Version_x byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_y byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_z byte = " ./core/core.go | cut -f 4 -d' ')" >> $GITHUB_ENV
-          ls
+
       - name: Restore Cache
         uses: actions/cache/restore@v4
         with:
@@ -122,10 +116,10 @@ jobs:
           # BEGIN riscv64 & ARM64 & LOONG64
           - goos: linux
             goarch: arm64
-          - goos: linux
-            goarch: riscv64
-          - goos: linux
-            goarch: loong64
+          # - goos: linux
+          #   goarch: riscv64
+          # - goos: linux
+          #   goarch: loong64
           # END riscv64 & ARM64 & LOONG64
           # BEGIN MIPS
           - goos: linux
@@ -173,6 +167,14 @@ jobs:
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
+
+      - name: Clone Openwrt Source Code
+        run: |
+          git clone -b main https://github.com/XTLS/Xray-core xray
+          rm -rf ./xray/.github ./xray/README.md
+          mv ./xray/* ./
+          echo "Xray_VER=$(grep "Version_x byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_y byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_z byte = " ./core/core.go | cut -f 4 -d' ')" >> $GITHUB_ENV
+          ls
 
       - name: Replace Custom to Commit ID
         if: github.event_name != 'release'
