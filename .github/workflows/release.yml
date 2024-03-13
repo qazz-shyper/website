@@ -171,7 +171,7 @@ jobs:
       - name: Clone Openwrt Source Code
         run: |
           git clone -b main https://github.com/XTLS/Xray-core xray
-          rm -rf ./xray/.github ./xray/README.md
+          rm -rf ./xray/.github ./xray/README.md ./xray/Makefile
           mv ./xray/* ./
           echo "Xray_VER=$(grep "Version_x byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_y byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_z byte = " ./core/core.go | cut -f 4 -d' ')" >> $GITHUB_ENV
           ls
@@ -201,19 +201,19 @@ jobs:
       - name: Get project dependencies
         run: go mod download
       
-      - name: Build Xray
+      - name: Build Website
         run: |
           mkdir -p build_assets
           make
           find . -maxdepth 1 -type f -regex '.*\(wxray\|xray\|xray_softfloat\)\(\|.exe\)' -exec mv {} ./build_assets/ \;
       
       - name: UPX website
-        if: matrix.goarch != 's390X'
-        uses: crazy-max/ghaction-upx@v2.3.0
+        if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64'
+        uses: crazy-max/ghaction-upx@latest
         with:
           version: latest
           files: |
-            ./build_assets/xray*
+            ./build_assets/website*
           args: -fq
 
       - name: Restore Cache
@@ -236,9 +236,9 @@ jobs:
         run: |
           pushd build_assets || exit 1
           touch -mt $(date +%Y01010000) *
-          zip -9vr ../Xray-${{ env.ASSET_NAME }}.zip .
+          zip -9vr ../Webiste-${{ env.ASSET_NAME }}.zip .
           popd || exit 1
-          FILE=./Xray-${{ env.ASSET_NAME }}.zip
+          FILE=./Website-${{ env.ASSET_NAME }}.zip
           DGST=$FILE.dgst
           for METHOD in {"md5","sha1","sha256","sha512"}
           do
@@ -247,21 +247,21 @@ jobs:
 
       - name: Change the name
         run: |
-          mv build_assets Xray-${{ env.ASSET_NAME }}
+          mv build_assets Website-${{ env.ASSET_NAME }}
 
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Xray-${{ env.ASSET_NAME }}
+          name: Website-${{ env.ASSET_NAME }}
           path: |
-            ./Xray-${{ env.ASSET_NAME }}/*
+            ./Website-${{ env.ASSET_NAME }}/*
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         if: env.UPLOAD_RELEASES == 'true' && github.event_name == 'release' && !cancelled()
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./Xray-${{ env.ASSET_NAME }}.zip*
+          file: ./Website-${{ env.ASSET_NAME }}.zip*
           file_glob: true
           tag: follow-v${{ env.Xray_VER }}
           overwrite: true
