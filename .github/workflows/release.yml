@@ -103,8 +103,8 @@ jobs:
           #   goarm: 5
           # END Linux ARM 5 6 7
           # BEGIN Android ARM 8
-          - goos: android
-            goarch: arm64
+          # - goos: android
+          #   goarch: arm64
           # END Android ARM 8
           # Windows ARM
           # - goos: windows
@@ -122,14 +122,14 @@ jobs:
           #   goarch: loong64
           # END riscv64 & ARM64 & LOONG64
           # BEGIN MIPS
-          - goos: linux
-            goarch: mips64
-          - goos: linux
-            goarch: mips64le
-          - goos: linux
-            goarch: mipsle
-          - goos: linux
-            goarch: mips
+          # - goos: linux
+          #   goarch: mips64
+          # - goos: linux
+          #   goarch: mips64le
+          # - goos: linux
+          #   goarch: mipsle
+          # - goos: linux
+          #   goarch: mips
           # END MIPS
           # BEGIN PPC
           # - goos: linux
