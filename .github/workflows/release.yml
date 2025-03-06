@@ -154,20 +154,20 @@ jobs:
             fi
           fi
   
+      - name: Website_file_path
+        run: |
+           if [[ ${GOARCH} == 'windows']]; then
+             Website_file_path = "./build_assets/.exe"
+           elif [[ ${GOARCH} == 'linux']]; then
+             Website_file_path = "./build_assets/website*"
+           fi
+           
       - name: UPX website
-        #if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
-        uses: crazy-max/ghaction-upx@v3.0.0
-         if [[ ${GOOS} == 'windows' ]]; then
-           Website_files_Path = "./build_assets/*.exe"
-           echo "Website_files=$Website_files_Path" >> $GITHUB_ENV
-          else
-            Website_files_Path = "./build_assets/website*"
-            echo "Website_files=$Website_files_Path" >> $GITHUB_ENV
-          fi
+        if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
         with:
           version: latest
           files: |
-            ${{evn.Website_files}}
+            $Website_file_path
           args: -fq
 
       - name: Restore Geodat Cache
