@@ -22,7 +22,8 @@ jobs:
     strategy:
       matrix:
         # Include amd64 on all platforms.
-        goos: [windows, freebsd, openbsd, linux, darwin]
+        #goos: [windows, freebsd, openbsd, linux, darwin]
+        goos: [windows, linux]
         goarch: [amd64, 386]
         patch-assetname: [""]
         # exclude:
@@ -182,7 +183,7 @@ jobs:
           touch -mt $(date +%Y01010000) *
           zip -9vr ../Website-${{ env.ASSET_NAME }}.zip .
           popd || exit 1
-          FILE=./W-${{ env.ASSET_NAME }}.zip
+          FILE=./Website-${{ env.ASSET_NAME }}.zip
           DGST=$FILE.dgst
           for METHOD in {"md5","sha1","sha256","sha512"}
           do
