@@ -159,6 +159,7 @@ jobs:
 
       - name: UPX website
         if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
+        uses: crazy-max/ghaction-upx@v3.0.0
         with:
           version: latest
           files: |
