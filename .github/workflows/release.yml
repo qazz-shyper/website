@@ -156,12 +156,16 @@ jobs:
           fi
   
       - name: UPX website
-        if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
+        #if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
         uses: crazy-max/ghaction-upx@v3.0.0
         with:
           version: latest
           files: |
-            ./build_assets/website*
+            if [[ ${GOOS} == 'windows' ]]; then
+              ./build_assets/*.exe
+            else
+              ./build_assets/website*
+            fi
           args: -fq
 
       - name: Restore Geodat Cache
