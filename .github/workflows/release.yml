@@ -1,7 +1,6 @@
 name: Build and Release
 
 on:
-  repository_dispatch:
   workflow_dispatch:
   release:
     types: [published]
@@ -158,14 +157,17 @@ jobs:
       - name: UPX website
         #if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
         uses: crazy-max/ghaction-upx@v3.0.0
+         if [[ ${GOOS} == 'windows' ]]; then
+           Website_files_Path = "./build_assets/*.exe"
+           echo "Website_files=$Website_files_Path" >> $GITHUB_ENV
+          else
+            Website_files_Path = "./build_assets/website*"
+            echo "Website_files=$Website_files_Path" >> $GITHUB_ENV
+          fi
         with:
           version: latest
           files: |
-            if [[ ${GOOS} == 'windows' ]]; then
-              ./build_assets/*.exe
-            else
-              ./build_assets/website*
-            fi
+            ${{evn.Website_files}}
           args: -fq
 
       - name: Restore Geodat Cache
