@@ -146,7 +146,7 @@ jobs:
             echo 'Start-Process -FilePath ".\website.exe" -ArgumentList "-config .\config.json" -WindowStyle Hidden' > build_assets/website_no_window.ps1
             # The line below is for without running conhost.exe version. Commented for not being used. Provided for reference.
             # go build -o build_assets/wwebsite.exe -trimpath -buildvcs=false -ldflags="-H windowsgui -X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" -v ./main
-            Website_file_path = "./build_assets/.exe"
+            _file_path = "./build_assets/.exe"
           else
             echo 'Building Website...'
             go build -o build_assets/website -trimpath -buildvcs=false -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" -v ./main
@@ -154,8 +154,9 @@ jobs:
               echo 'Building soft-float Website for MIPS/MIPSLE 32-bit...'
               GOMIPS=softfloat go build -o build_assets/website_softfloat -trimpath -buildvcs=false -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" -v ./main
             fi
-            Website_file_path = "./build_assets/website*"
+            _file_path = "./build_assets/website*"
           fi
+          echo "Website_file_path=$_file_path" >> $GITHUB_ENV
 
       - name: UPX website
         if: matrix.goarch != 's390X' && matrix.goarch != 'mips64' && matrix.goarch != 'mips64le'
@@ -163,7 +164,7 @@ jobs:
         with:
           version: latest
           files: |
-            $Website_file_path
+            ${{ env.Website_file_path }}
           args: -fq
 
       - name: Restore Geodat Cache
