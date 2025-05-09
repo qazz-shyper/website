@@ -80,7 +80,7 @@ jobs:
         goos: [windows, linux]
         goarch: [amd64, 386]
         patch-assetname: [""]
-        exclude:
+        # exclude:
           # Exclude i386 on darwin
           # - goarch: 386
           #   goos: darwin
