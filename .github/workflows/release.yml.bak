@@ -195,6 +195,7 @@ jobs:
       - name: Change the name
         run: |
           mv build_assets Website-${{ env.ASSET_NAME }}
+          ls
 
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v4
@@ -210,5 +211,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./Website-${{ env.ASSET_NAME }}.zip*
           tag: follow-v${{ env.Xray_VER }}
-          file_glob: true
+          #file_glob: true
           overwrite: true
