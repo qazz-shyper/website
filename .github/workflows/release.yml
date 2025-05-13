@@ -281,7 +281,7 @@ jobs:
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
-        if: env.UPLOAD_RELEASES == 'true'  && !cancelled()
+        if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./Website-${{ env.ASSET_NAME }}.zip*
