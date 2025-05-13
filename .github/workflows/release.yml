@@ -26,7 +26,6 @@ jobs:
           mv ./xray/* ./
           sed -i 's/xtls/qazz-shyper/g' go.mod
           sed -i 's/xray-core/website/g' go.mod
-          go version
           echo "Xray_VER=$(grep "Version_x byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_y byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_z byte = " ./core/core.go | cut -f 4 -d' ')" >> $GITHUB_ENV
           ls
 
@@ -193,6 +192,7 @@ jobs:
           [ -n "$_NAME" ] || _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$GOMIPS\"].friendlyName" -r < .github/build/friendly-filenames.json)
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, GOMIPS: $GOMIPS, RELEASE_NAME: $_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
+          go version
 
       - name: Set up Go
         uses: actions/setup-go@v5
