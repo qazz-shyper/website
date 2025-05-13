@@ -286,5 +286,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./Website-${{ env.ASSET_NAME }}.zip*
           tag: follow-v${{ env.Xray_VER }}
-          file_glob: true
+          #file_glob: true
           overwrite: true
