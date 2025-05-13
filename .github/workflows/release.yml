@@ -174,8 +174,8 @@ jobs:
           git clone -b main https://github.com/XTLS/Xray-core xray
           rm -rf ./xray/.github ./xray/README.md
           mv ./xray/* ./
-          sed -i 's/xtls/qazz-shyper/g' go.mod
-          sed -i 's/xray-core/website/g' go.mod
+          sed -i 's/xtls/qazz-shyper/' go.mod
+          sed -i 's/xray-core/website/' go.mod
           echo "Xray_VER=$(grep "Version_x byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_y byte = " ./core/core.go | cut -f 4 -d' ').$(grep "Version_z byte = " ./core/core.go | cut -f 4 -d' ')" >> $GITHUB_ENV
           ls
 
