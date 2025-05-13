@@ -271,6 +271,7 @@ jobs:
       - name: Change the name
         run: |
           mv build_assets Website-${{ env.ASSET_NAME }}
+          ls
 
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v4
